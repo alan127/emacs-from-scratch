@@ -1,0 +1,519 @@
+:PROPERTIES:
+:ID:       da5a62cb-fec4-45a5-9515-8e20ef4e9f7f
+:END:
+#+title: GNU Emacs
+#+setupfile: ~/.local/share/org-html-themes.git/org/theme-readtheorg-local.setup
+#+export_file_name: ~/org/export/GNU-Emacs
+
+* Table of contents :toc:noexport:
+- [[#goal][Goal]]
+- [[#infos][Infos]]
+- [[#initel][init.el]]
+- [[#package-management][Package management]]
+- [[#evil-mode][Evil Mode]]
+  - [[#evil][Evil]]
+  - [[#evil-collection][Evil collection]]
+  - [[#spc-as-leader-prefix][SPC as leader prefix]]
+- [[#general-configuration][General configuration]]
+  - [[#user-interface][User Interface]]
+  - [[#line-numbers][Line numbers]]
+  - [[#history][History]]
+  - [[#revert-dired-and-other-buffers][Revert Dired and other buffers]]
+  - [[#frame-transparency][Frame transparency]]
+  - [[#maximize-frames-by-default][Maximize frames by default]]
+- [[#themes][Themes]]
+- [[#dired][Dired]]
+- [[#modeline][Modeline]]
+  - [[#doom-modeline][Doom Modeline]]
+  - [[#date-format][Date format]]
+- [[#editing-configuration][Editing configuration]]
+  - [[#tab-width][Tab width]]
+  - [[#use-spaces-instead-of-tabs][Use spaces instead of tabs]]
+  - [[#automatically-clean-whitespace][Automatically clean whitespace]]
+- [[#which-key][Which Key]]
+- [[#ivy-or-vertico-stuff][Ivy or Vertico stuff]]
+- [[#org-mode][Org Mode]]
+  - [[#org-roam][Org Roam]]
+- [[#exwm][exwm]]
+- [[#references][References]]
+
+* Goal
+
+Learning more about [[id:40e05933-fdb3-463c-8303-912fb9adb7e6][Emacs]]
+
+* Infos
+
+For documentation on modules provided by [[id:4f91b62b-ff45-4b30-acaf-4299c1f57959][Doom Emacs]], once the README file of any given module is open, press =SPC f f= to visit its source code
+
+#+begin_example
+SPC h d m
+#+end_example
+
+Or visit [[id:4f91b62b-ff45-4b30-acaf-4299c1f57959][Doom Emacs]] =init.el= and press ~K~ while hovering a module
+
+- [[https://www.youtube-nocookie.com/embed/48JlgiBpw_I?start=2693][The key prefixes C-x and C-c]]
+
+* init.el
+
+[[id:40e05933-fdb3-463c-8303-912fb9adb7e6][Emacs]] can load ~emacs-lisp~ code block from an [[id:72f7c5fa-ff78-40f5-93e4-19e123e129d7][Org Mode]] file, using this method, the =init.el= file must contain the following
+
+#+begin_example
+(org-babel-load-file
+ (expand-file-name
+  "20230128234712-gnu_emacs.org"
+  user-emacs-directory))
+#+end_example
+
+* Package management
+
+#+begin_src emacs-lisp
+(require 'package)
+
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/"))
+
+(package-initialize)
+(package-refresh-contents)
+
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+
+(setq use-package-always-ensure t)
+#+end_src
+
+* Evil Mode
+
+- [[https://github.com/noctuid/evil-guide]]
+- [[https://github.com/daviwil/emacs-from-scratch/blob/master/init.el#L101-L107]]
+
+** Evil
+
+#+begin_src emacs-lisp
+(use-package evil
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-split-window-below t)
+  (setq evil-vsplit-window-right t)
+  :config
+  (evil-mode 1))
+#+end_src
+
+** Evil collection
+
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil
+  :config
+  (setq evil-collection-mode-list '(dashboard dired ibuffer))
+  (evil-collection-init))
+#+end_src
+
+** SPC as leader prefix
+
+- [[https://github.com/daviwil/dotfiles/blob/master/Emacs.org#simplify-leader-bindings-generalel]]
+
+#+begin_src emacs-lisp
+(use-package general
+  :config
+  (general-evil-setup t))
+#+end_src
+
+See [[id:40e05933-fdb3-463c-8303-912fb9adb7e6][Emacs]] key bindings table
+
+#+begin_src emacs-lisp
+(nvmap :prefix "SPC"
+       "b B"    '(ibuffer-list-buffers :which-key "Switch buffer")
+;;     "b b"    '(+vertico/switch-workspace-buffer :which-key "Switch workspace buffer")
+       "b i"    '(ibuffer :which-key "ibuffer")
+;;     "b K"    '(doom/kill-all-buffers :which-key "Kill all buffers")
+       "b k"    '(kill-current-buffer :which-key "Kill buffer")
+       "b n"    '(next-buffer :which-key "Next buffer")
+       "b p"    '(previous-buffer :which-key "Previous buffer")
+       "b r"    '(revert-buffer :which-key "Revert buffer")
+       "b s"    '(basic-save-buffer :which-key "Save buffer")
+;;     "b y"    '(+default/yank-buffer-contents :which-key "Yank buffer")
+;;     "f C"    '(doom/copy-this-file :which-key "Copy this file")
+;;     "f d"    '(+default/dired :which-key "Find directory")
+;;     "f D"    '(doom/delete-this-file :which-key "Delete this file")
+;;     "f F"    '(+default/find-file-under-here :which-key "Find file from here")
+       "f f"    '(find-file :which-key "Find file")
+       "f l"    '(consult-locate :which-key "Locate file")
+       "f r"    '(consult-recent-file :which-key "Recent files")
+;;     "f R"    '(doom/move-this-file :which-key "Rename/move file")
+       "f S"    '(write-file :which-key "Save files as...")
+;;     "g C"    '(magit-clone :which-key "Magit clone")
+;;     "g g"    '(magit-status :which-key "Magit status")
+       "h f"    '(helpful-callable :which-key "describe-function")
+       "h k"    '(helpful-key :which-key "describe-key")
+       "h t"    '(consult-theme :which-key "load-theme")
+       "h v"    '(helpful-variable :which-key "describe-variable")
+       "i u"    '(insert-char :which-key "Unicode")
+       "m e"    '(org-export-dispatch :which-key "org-export-dispatch")
+       "n r f"  '(org-roam-node-find :which-key "Find node")
+       "n r i"  '(org-roam-node-insert :which-key "Insert node")
+       "n r r"  '(org-roam-buffer-toggle :which-key "Toggle roam buffer")
+       "n r s"  '(org-roam-db-sync :which-key "Sync database")
+;;     "n s"    '(+default/org-notes-search :which-key "Search notes")
+       "q K"    '(save-buffers-kill-emacs :which-key "Kill Emacs (and daemon)")
+       "q q"    '(save-buffers-kill-terminal :which-key "Quit Emacs")
+;;     "s b"    '(+default/search-buffer :which-key "Search buffer")
+;;     "s d"    '(+default/search-cwd :which-key "Search current directory")
+       "s i"    '(consult-imenu :which-key "Jump to symbol")
+;;     "t b"    '(doom-big-font-mode :which-key "Big mode")
+       "t F"    '(toggle-frame-fullscreen :which-key "Frame fullscreen")
+       "t v"    '(visible-mode :which-key "Visible mode")
+       )
+#+end_src
+
+* General configuration
+
+- [[https://github.com/daviwil/dotfiles/blob/master/Emacs.org#general-configuration]]
+
+** User Interface
+
+#+begin_src emacs-lisp
+(setq inhibit-startup-message t)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+;;(tooltip-mode -1) ;; never seen any tooltips
+(set-fringe-mode 8)
+(menu-bar-mode -1)
+#+end_src
+
+** Line numbers
+
+Display line numbers, set to ~nil~ to disable it and for relative line numbers set to ~relative~
+
+~column-number-mode~ display the column number in the mode line next to the line number
+
+#+begin_src emacs-lisp
+(global-display-line-numbers-mode 1)
+(column-number-mode)
+#+end_src
+
+** History
+
+*** Save what you enter into minibuffer prompts
+
+The echo area and the minibuffer share the same spot on the screen. The minibuffer is nearly identical to a normal buffer: you can use most of your editing commands, and the one-line minibuffer will expand to multiple lines if necessary. It is how you communicate with Emacs
+
+The minibuffer is directly below the modeline and it is where errors and general information are shown
+
+#+begin_src emacs-lisp
+(setq history-length 25)
+(savehist-mode 1)
+#+end_src
+
+*** Remember and restore the last cursor location of opened files
+
+#+begin_src emacs-lisp
+(save-place-mode 1)
+#+end_src
+
+*** Remember recently edited files
+
+- [[https://www.emacswiki.org/emacs/RecentFiles]]
+
+#+begin_src emacs-lisp
+(recentf-mode 1) ;; TODO look more into =recentf= automatization if there is something to be configured for auto cleanup/update
+;; TODO look into autosaving every x
+#+end_src
+
+** Revert Dired and other buffers
+
+#+begin_src emacs-lisp
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers 1
+      auto-revert-verbose t)
+#+end_src
+
+** Frame transparency
+
+#+begin_src emacs-lisp
+(set-frame-parameter (selected-frame) 'alpha '(95 . 95))
+(add-to-list 'default-frame-alist '(alpha . (95 . 95)))
+#+end_src
+
+** Maximize frames by default
+
+#+begin_src emacs-lisp
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+end_src
+
+* Themes
+
+- [[https://github.com/doomemacs/themes]]
+
+#+begin_src emacs-lisp
+(use-package doom-themes
+  :ensure t
+  :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t))
+
+(load-theme 'doom-tomorrow-night t)
+#+end_src
+
+* Dired
+
+#+begin_src emacs-lisp
+;; TODO dired has key bindings on SPC
+(setq dired-listing-switches "-lah -v --group-directories-first"
+      delete-by-moving-to-trash t
+      trash-directory "~/.local/share/Trash/files/")
+
+(use-package dired-rainbow
+  :config
+  (progn
+    (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
+    (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
+    (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
+    (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
+    (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
+    (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
+    (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
+    (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
+    (dired-rainbow-define log "#c17d11" ("log"))
+    (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
+    (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
+    (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
+    (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
+    (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
+    (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
+    (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
+    (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
+    (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
+    (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
+    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")))
+#+end_src
+
+* Modeline
+
+** Doom Modeline
+
+- [[https://github.com/seagle0128/doom-modeline]]
+- [[https://github.com/seagle0128/doom-modeline#customize]]
+
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1)
+  :custom ((doom-modeline-height 25)))
+#+end_src
+
+- [[https://github.com/domtronn/all-the-icons.el#installing-fonts]]
+
+#+begin_example
+M-x all-the-icons-install-fonts
+#+end_example
+
+** Date format
+
+#+begin_src emacs-lisp
+(setq display-time-format "%a %d %B %H:%M"
+      display-time-default-load-average nil)
+(display-time-mode)
+#+end_src
+
+* Editing configuration
+
+** Tab width
+
+#+begin_src emacs-lisp
+(setq-default tab-width 2)
+(setq-default evil-shift-width tab-width)
+#+end_src
+
+** Use spaces instead of tabs
+
+#+begin_src emacs-lisp
+(setq-default indent-tabs-mode nil)
+#+end_src
+
+** Automatically clean whitespace
+
+#+begin_src emacs-lisp
+(use-package ws-butler)
+(require 'ws-butler)
+(add-hook 'prog-mode-hook #'ws-butler-mode)
+#+end_src
+
+* Which Key
+
+- [[https://github.com/justbur/emacs-which-key]]
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :defer 0
+  :diminish which-key-mode
+  :config
+  (which-key-mode)
+  (setq which-key-idle-delay 1))
+#+end_src
+
+* Ivy or Vertico stuff
+
+[[id:4f91b62b-ff45-4b30-acaf-4299c1f57959][Doom Emacs]] is using Vertico in =init.el=
+
+#+begin_src emacs-lisp
+(use-package counsel
+  :after ivy
+  :config (counsel-mode))
+(use-package ivy
+  :defer 0.1
+  :diminish
+  :bind
+  (("C-c C-r" . ivy-resume)
+   ("C-x B" . ivy-switch-buffer-other-window))
+  :custom
+  (setq ivy-count-format "(%d/%d) ")
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t)
+  :config
+  (ivy-mode))
+(use-package ivy-rich
+  :after ivy
+  :custom
+  (ivy-virtual-abbreviate 'full
+   ivy-rich-switch-buffer-align-virtual-buffer t
+   ivy-rich-path-style 'abbrev)
+  :config
+  (ivy-set-display-transformer 'ivy-switch-buffer
+                               'ivy-rich-switch-buffer-transformer)
+  (ivy-rich-mode 1)) ;; this gets us descriptions in M-x.
+(use-package swiper
+  :after ivy
+  :bind (("C-s" . swiper)
+         ("C-r" . swiper)))
+#+end_src
+
+- [[https://github.com/minad/vertico]]
+
+#+begin_src emacs-lisp
+;;(use-package vertico
+;;  :init
+;;  (vertico-mode))
+#+end_src
+
+- [[https://github.com/minad/consult]]
+
+#+begin_src emacs-lisp
+;;(use-package consult
+;;  :hook (completion-list-mode . consult-preview-at-point-mode)
+;;  :init
+;;  (setq register-preview-delay 0.5
+;;        register-preview-function #'consult-register-format)
+;;  (advice-add #'register-preview :override #'consult-register-window)
+;;  (setq xref-show-xrefs-function #'consult-xref
+;;        xref-show-definitions-function #'consult-xref)
+;;  :config
+;;  (consult-customize
+;;   consult-theme :preview-key '(:debounce 0.2 any)
+;;   consult-ripgrep consult-git-grep consult-grep
+;;   consult-bookmark consult-recent-file consult-xref
+;;   consult--source-bookmark consult--source-file-register
+;;   consult--source-recent-file consult--source-project-recent-file
+;;   ;; :preview-key "M-."
+;;   :preview-key '(:debounce 0.4 any))
+;;  (setq consult-narrow-key "<") ;; "C-+"
+;;)
+#+end_src
+
+* Org Mode
+
+- [[https://github.com/jimeh/.emacs.d/blob/master/snippets/org-mode/src][Org snippets like <s TAB]]
+
+#+begin_src emacs-lisp
+;; TODO missing todo code block highlighting and table of contents navigation stuff
+(setq org-directory "~/org")
+
+;; Indentation for Org files
+(org-indent-mode)
+#+end_src
+
+- [[https://github.com/Somelauw/evil-org-mode]]
+
+#+begin_src emacs-lisp
+(use-package evil-org
+  :ensure t
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+#+end_src
+
+Helps to have an up-to-date table of contents in org files without exporting
+
+#+begin_src emacs-lisp
+;; TODO check if this works
+(use-package! toc-org ; auto-table of contents
+  :hook (org-mode . toc-org-enable)
+  :config
+  (setq toc-org-hrefify-default "gh")
+
+  (defadvice! +org-inhibit-scrolling-a (fn &rest args)
+    "Prevent the jarring scrolling that occurs when the-ToC is regenerated."
+    :around #'toc-org-insert-toc
+    (let ((p (set-marker (make-marker) (point)))
+          (s (window-start)))
+      (prog1 (apply fn args)
+        (goto-char p)
+        (set-window-start nil s t)
+        (set-marker p nil)))))
+#+end_src
+
+** Org Roam
+
+#+begin_example
+(use-package org-roam
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  :custom
+  (setq org-roam-directory "~/org/roam")
+  (setq org-roam-complete-everywhere t)
+  (setq org-roam-capture-templates
+   '(("d" "default" plain (file "~/org/roam/templates/default.org")
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+     ("b" "basic" plain (file "~/org/roam/templates/basic.org")
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)))
+  :config
+  (org-roam-db-autosync-enable))
+#+end_example
+
+* exwm
+
+Using Emacs as window manager with exwm (testing inside a virtual machine)
+
+Install =exwm=
+
+#+begin_example
+M-x package-install RET exwm RET
+#+end_example
+
+Make sure =xrandr= is installed and ~Virtual-1~ is the screen
+
+#+begin_src emacs-lisp
+(require 'exwm-config)
+(exwm-config-default)
+(require 'exwm-randr)
+(setq exwm-randr-workspace-output-plist '(0 "Virtual-1"'))
+(add-hook 'exwm-randr-screen-change-hook
+          (lambda ()
+            (start-process-shell-command
+             "xrandr" nil "xrandr --output Virtual-1 --mode 1920x1080 --pos 0x0 --rotate normal")))
+(exwm-randr-enable)
+(require 'exwm-systemtray)
+(exwm-systemtray-enable)
+#+end_src
+
+* References
+
+- [[https://github.com/daviwil/dotfiles/blob/master/Emacs.org]]
+- [[https://gitlab.com/dwt1/dotfiles/-/blob/master/.emacs.d.gnu/config.org]]
